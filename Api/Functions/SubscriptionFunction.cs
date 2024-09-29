@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System.Net;
+using Azure;
 
 namespace IblFunction.Functions
 {
@@ -20,9 +24,9 @@ namespace IblFunction.Functions
         }
 
         [Function("Subscription")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
+        public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req)
         {
-            this.returnDummy();
+            //return this.returnDummy();
             try
             {
                 log.LogInformation("SubscriptionFunction: GetSubscriptions HTTP trigger function processed a request.");
@@ -38,7 +42,7 @@ namespace IblFunction.Functions
                 var subscriptions = armClient.GetSubscriptions();
                 log.LogInformation("SubscriptionFunction: Subscriptions retrieved");
                 var subscriptionList = new List<Subscription>();
-                await foreach (SubscriptionResource subscription in subscriptions)
+                foreach (SubscriptionResource subscription in subscriptions)
                 {
                     log.LogInformation($"SubscriptionFunction: Processing subscription {subscription.Data.SubscriptionId}");
                     // Estrai i dati necessari dal SubscriptionResource
@@ -62,16 +66,20 @@ namespace IblFunction.Functions
 
                 log.LogInformation("SubscriptionFunction: Returning subscriptions");
                 // Ritorna la lista di sottoscrizioni come JSON
-                return new OkObjectResult(subscriptionList);
+                var response = req.CreateResponse(HttpStatusCode.OK);
+                response.WriteAsJsonAsync(subscriptionList);
+                return response;
             }
             catch (Exception ex)
             {
                 log.LogError($"Errore durante l'ottenimento delle sottoscrizioni: {ex.Message}");
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+                var response = req.CreateResponse(HttpStatusCode.InternalServerError);
+                response.WriteAsJsonAsync("Exception in request: " + ex.Message);
+                return response;
             }
         }
 
-        private async Task<IActionResult> returnDummy()
+        private HttpResponseData returnDummy(HttpRequestData req)
         {
 
             log.LogInformation("Willt return dummy info");
@@ -80,7 +88,10 @@ namespace IblFunction.Functions
             subscriptionList.Add(new Subscription("2", "Subscription 2", "Display Name 2", SubscriptionState.Enabled, new Dictionary<string, string>()));
             subscriptionList.Add(new Subscription("3", "Subscription 3", "Display Name 3", SubscriptionState.Enabled, new Dictionary<string, string>()));
             subscriptionList.Add(new Subscription("4", "Subscription 4", "Display Name 4", SubscriptionState.Enabled, new Dictionary<string, string>()));
-            return new OkObjectResult(subscriptionList);
+            // Ritorna la lista di sottoscrizioni come JSON
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            response.WriteAsJsonAsync(subscriptionList);
+            return response;
         }
 
         private SubscriptionState MapSubscriptionState(Azure.ResourceManager.Resources.Models.SubscriptionState? azureState)
