@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using System.Net;
 using System.Text.Json;
 using Azure;
+using System.Net.Mail;
 
 namespace IblFunction.Functions
 {
@@ -27,16 +28,16 @@ namespace IblFunction.Functions
         [Function("Subscription")]
         public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req)
         {
-            //return this.returnDummy();
+            return this.returnDummy(req);
             try
             {
                 log.LogInformation("SubscriptionFunction: GetSubscriptions HTTP trigger function processed a request.");
                 // Usa DefaultAzureCredential per autenticare
-                var credential = new DefaultAzureCredential();
+                //var credential = new DefaultAzureCredential();
 
                 log.LogInformation("SubscriptionFunction: Creating ArmClient");
                 // Crea il client Azure Resource Manager
-                var armClient = new ArmClient(credential);
+                //var armClient = new ArmClient(credential);
              
                 log.LogInformation("SubscriptionFunction: Getting subscriptions");
                 // Ottieni le sottoscrizioni
@@ -112,9 +113,12 @@ namespace IblFunction.Functions
             subscriptionList.Add(new Subscription("2", "Subscription 2", "Display Name 2", SubscriptionState.Enabled, new Dictionary<string, string>()));
             subscriptionList.Add(new Subscription("3", "Subscription 3", "Display Name 3", SubscriptionState.Enabled, new Dictionary<string, string>()));
             subscriptionList.Add(new Subscription("4", "Subscription 4", "Display Name 4", SubscriptionState.Enabled, new Dictionary<string, string>()));
-            // Ritorna la lista di sottoscrizioni come JSON
+            SubscriptionFunctionResponse functionResponse = new SubscriptionFunctionResponse(
+                HttpStatusCode.OK,
+                subscriptionList
+             );
             var response = req.CreateResponse(HttpStatusCode.OK);
-            response.WriteAsJsonAsync(subscriptionList);
+            response.WriteAsJsonAsync(functionResponse);
             return response;
         }
 
