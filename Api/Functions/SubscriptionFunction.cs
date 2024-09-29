@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace IblFunction.Functions
 {
@@ -19,7 +20,7 @@ namespace IblFunction.Functions
         }
 
         [Function("Subscription")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
         {
             try
             {
@@ -67,6 +68,12 @@ namespace IblFunction.Functions
                 log.LogError($"Errore durante l'ottenimento delle sottoscrizioni: {ex.Message}");
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
+        }
+
+        private async Task<IActionResult> returnDummy()
+        {
+            log.LogInformation("Willt return dummy info");
+            return null;
         }
 
         private SubscriptionState MapSubscriptionState(Azure.ResourceManager.Resources.Models.SubscriptionState? azureState)
