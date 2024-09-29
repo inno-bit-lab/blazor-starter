@@ -22,6 +22,7 @@ namespace IblFunction.Functions
         [Function("Subscription")]
         public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
         {
+            this.returnDummy();
             try
             {
                 log.LogInformation("SubscriptionFunction: GetSubscriptions HTTP trigger function processed a request.");
@@ -72,8 +73,14 @@ namespace IblFunction.Functions
 
         private async Task<IActionResult> returnDummy()
         {
+
             log.LogInformation("Willt return dummy info");
-            return null;
+            var subscriptionList = new List<Subscription>();
+            subscriptionList.Add(new Subscription("1", "Subscription 1", "Display Name 1", SubscriptionState.Enabled, new Dictionary<string, string>()));
+            subscriptionList.Add(new Subscription("2", "Subscription 2", "Display Name 2", SubscriptionState.Enabled, new Dictionary<string, string>()));
+            subscriptionList.Add(new Subscription("3", "Subscription 3", "Display Name 3", SubscriptionState.Enabled, new Dictionary<string, string>()));
+            subscriptionList.Add(new Subscription("4", "Subscription 4", "Display Name 4", SubscriptionState.Enabled, new Dictionary<string, string>()));
+            return new OkObjectResult(subscriptionList);
         }
 
         private SubscriptionState MapSubscriptionState(Azure.ResourceManager.Resources.Models.SubscriptionState? azureState)
