@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Net;
+using System.Text.Json;
 using Azure;
 
 namespace IblFunction.Functions
@@ -66,19 +67,42 @@ namespace IblFunction.Functions
 
                 log.LogInformation("SubscriptionFunction: Returning subscriptions");
                 // Ritorna la lista di sottoscrizioni come JSON
-                var response = req.CreateResponse(HttpStatusCode.OK);
-                response.WriteAsJsonAsync(subscriptionList);
-                return response;
+                HttpResponseData httpResponseData = this.CreateSuccessResponse(req, HttpStatusCode.OK, subscriptionList);
+                //var response = req.CreateResponse(HttpStatusCode.OK);
+                //response.WriteAsJsonAsync(subscriptionList);
+                return httpResponseData;
             }
             catch (Exception ex)
             {
                 log.LogError($"Errore durante l'ottenimento delle sottoscrizioni: {ex.Message}");
-                var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-                response.WriteAsJsonAsync("Exception in request: " + ex.Message);
-                return response;
+                HttpResponseData httpResponseData = this.CreateFailureResponse(req, HttpStatusCode.InternalServerError, new FunctionResponseError("500","Exception in request: " + ex.Message));
+                //var response = req.CreateResponse(HttpStatusCode.InternalServerError);
+                //response.WriteAsJsonAsync("Exception in request: " + ex.Message);
+                return httpResponseData;
             }
         }
 
+        private HttpResponseData CreateSuccessResponse(HttpRequestData req, HttpStatusCode httpStatusCode, List<Subscription> contentObject)
+        {
+            SubscriptionFunctionResponse functionResponse = new SubscriptionFunctionResponse(
+                httpStatusCode,
+                contentObject
+                );
+            var response = req.CreateResponse(httpStatusCode);
+            response.WriteAsJsonAsync(functionResponse);
+            return response;
+        }
+        private HttpResponseData CreateFailureResponse(HttpRequestData req, HttpStatusCode httpStatusCode, FunctionResponseError error)
+        {
+            SubscriptionFunctionResponse functionResponse = new SubscriptionFunctionResponse(
+                httpStatusCode,
+                error
+            );
+            var response = req.CreateResponse(httpStatusCode);
+            response.WriteAsJsonAsync(functionResponse);
+            return response;
+        }
+        
         private HttpResponseData returnDummy(HttpRequestData req)
         {
 
