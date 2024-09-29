@@ -33,11 +33,11 @@ namespace IblFunction.Functions
             {
                 log.LogInformation("SubscriptionFunction: GetSubscriptions HTTP trigger function processed a request.");
                 // Usa DefaultAzureCredential per autenticare
-                //var credential = new DefaultAzureCredential();
+                var credential = new DefaultAzureCredential();
 
                 log.LogInformation("SubscriptionFunction: Creating ArmClient");
                 // Crea il client Azure Resource Manager
-                //var armClient = new ArmClient(credential);
+                var armClient = new ArmClient(credential);
              
                 log.LogInformation("SubscriptionFunction: Getting subscriptions");
                 // Ottieni le sottoscrizioni
