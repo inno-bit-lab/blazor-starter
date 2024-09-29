@@ -1,0 +1,58 @@
+@page "/azure-subscriptions"
+@using BlazorApp.Client.Services
+@using BlazorApp.Shared.Models
+@inject AzureSubscriptionService SubscriptionService
+
+<PageTitle>Subscriptions</PageTitle>
+
+<h1>Azure Subscriptions</h1>
+
+@if (subscriptions == null)
+{
+    <p>Loading...</p>
+}
+else if (subscriptions.Count == 0)
+{
+    <p>No subscriptions found.</p>
+}
+else
+{
+
+    
+    <table class="table">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>State</th>
+            <th>Tags</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var subscription in subscriptions)
+        {
+            <tr>
+                <td>@subscription.SubscriptionId</td>
+                <td>@subscription.DisplayName</td>
+                <td>@subscription.State</td>
+                <td>@TagsArrayToString(@subscription.Tags)</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Subscription>? subscriptions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        subscriptions = await SubscriptionService.GetAzureSubscriptionsAsync();
+    }
+
+    private static string TagsArrayToString(IReadOnlyDictionary<string,string> dataTags)
+    {
+        return dataTags.Aggregate("", (current, tag) => current + (tag.Key + ": " + tag.Value + ", "));
+    }
+
+}
